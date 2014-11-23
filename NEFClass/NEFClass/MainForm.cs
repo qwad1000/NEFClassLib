@@ -33,7 +33,6 @@ namespace NEFClass
                 TrainConfiguration.TRAIN_RULES_BEST,
                 TrainConfiguration.TRAIN_RULES_BEST_FOR_CLASS
             };
-            this.sigmaTextBox.Text = Math.Pow(10, (int)sigmaInput.Value).ToString();
 
             Log.RegisterHandler(new TextBoxLogHandler(logTextBox));
         }
@@ -67,11 +66,6 @@ namespace NEFClass
             }
         }
 
-        private void sigmaInput_ValueChanged(object sender, EventArgs e)
-        {
-            sigmaTextBox.Text = Math.Pow(10, (int)sigmaInput.Value).ToString();
-        }
-
         private void DoTrain()
         {
             TrainConfiguration config = new TrainConfiguration();
@@ -84,7 +78,9 @@ namespace NEFClass
                 config.FuzzyPartsCount[i] = Convert.ToInt32(this.sectionsDataGridView[1, i].Value);
 
             config.RulesTrainAlgo = rulesAlgoComboBox.SelectedValue.ToString();
-            config.OptimizationSpeed = Convert.ToDouble(sigmaTextBox.Text);
+            config.OptimizationSpeed = Convert.ToDouble(optimizationSpeedTextBox.Text);
+            config.MaxIterations = Convert.ToInt32(maxEpochsInput.Value);
+            config.Accuracy = Convert.ToDouble(accTextBox.Text); ;
 
             network = new NEFClassNetwork(trainDataset, config);
 
