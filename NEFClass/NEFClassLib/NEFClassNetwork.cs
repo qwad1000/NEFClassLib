@@ -409,5 +409,11 @@ namespace NEFClassLib
 
             return "";
         }
+
+        public double[] GetOutput(NCEntity entity)
+        {
+            Propagate(entity);
+            return mOutputLayer;
+        }
     }
 }

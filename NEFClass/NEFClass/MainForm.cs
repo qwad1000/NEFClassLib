@@ -104,12 +104,21 @@ namespace NEFClass
                 NCDataSet dataset = new NCDataSet(filename);
 
                 int goodCount = 0;
-
+                double rmse = 0;
                 for (int i = 0; i < dataset.Length; ++i)
+                {
                     if (dataset[i].Class == network.Classify(dataset[i]))
                         ++goodCount;
 
-                MessageBox.Show(String.Format("Размер выборки: {0}\nТочность: {1}%\nНеудачных попыток: {2}", dataset.Length, (goodCount * 100.0 / dataset.Length).ToString("0.##"), dataset.Length - goodCount), "Результаты");
+                    double[] desiredOutput = new double[dataset.GetClassesList().Length];
+                    desiredOutput[network.GetClassIndex(dataset[i].Class)] = 1;
+                    double[] output = network.GetOutput(dataset[i]);
+
+                    for (int z = 0; z < output.Length; ++z)
+                        rmse += (desiredOutput[z] - output[z]) * (desiredOutput[z] - output[z]);
+                }
+
+                MessageBox.Show(String.Format("Размер выборки: {0}\nТочность: {1}%\nНеудачных попыток: {2}\nError: {3}", dataset.Length, (goodCount * 100.0 / dataset.Length).ToString("0.##"), dataset.Length - goodCount, (Math.Sqrt(rmse) / dataset.Length).ToString("0.####")), "Результаты");
             }
         }
     }

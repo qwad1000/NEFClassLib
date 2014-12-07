@@ -49,7 +49,7 @@ namespace NEFClassLib
             this.mEntities = new NCEntity[rawData.Length];
             for (int i = 0; i < rawData.Length; ++i)
             {
-                string[] entityData = rawData[i].Split(",".ToCharArray());
+                string[] entityData = rawData[i].Split(";".ToCharArray());
                 double[] attributes = new double[entityData.Length - 1];
 
                 int classIndex = entityData.Length - 1;
