@@ -39,10 +39,16 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Bounds.cs" />
+    <Compile Include="GaussFuzzyNumber.cs" />
+    <Compile Include="GaussPartition.cs" />
     <Compile Include="NCDataSet.cs" />
+    <Compile Include="NEFClassMNetwork.cs" />
     <Compile Include="NEFClassNetwork.cs" />
     <Compile Include="Partition.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Rule.cs" />
+    <Compile Include="TrainConfiguration.cs" />
     <Compile Include="TriangleFuzzyNumber.cs" />
   </ItemGroup>
   <ItemGroup>

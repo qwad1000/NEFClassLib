@@ -28,12 +28,17 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle5 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle8 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle6 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle7 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle4 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
             this.dataLoadDialog = new System.Windows.Forms.OpenFileDialog();
             this.learnGroupBox = new System.Windows.Forms.GroupBox();
+            this.accTextBox = new System.Windows.Forms.TextBox();
+            this.label12 = new System.Windows.Forms.Label();
+            this.optimizationSpeedTextBox = new System.Windows.Forms.TextBox();
+            this.maxEpochsInput = new System.Windows.Forms.NumericUpDown();
+            this.label11 = new System.Windows.Forms.Label();
             this.checkButton = new System.Windows.Forms.Button();
             this.trainButton = new System.Windows.Forms.Button();
             this.label10 = new System.Windows.Forms.Label();
@@ -60,15 +65,10 @@
             this.trainDatasetFileDialog = new System.Windows.Forms.OpenFileDialog();
             this.checkFileDialog = new System.Windows.Forms.OpenFileDialog();
             this.logTextBox = new System.Windows.Forms.TextBox();
-            this.label11 = new System.Windows.Forms.Label();
-            this.maxEpochsInput = new System.Windows.Forms.NumericUpDown();
-            this.optimizationSpeedTextBox = new System.Windows.Forms.TextBox();
-            this.accTextBox = new System.Windows.Forms.TextBox();
-            this.label12 = new System.Windows.Forms.Label();
             this.learnGroupBox.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.maxEpochsInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.maxRulesInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.sectionsDataGridView)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.maxEpochsInput)).BeginInit();
             this.SuspendLayout();
             // 
             // learnGroupBox
@@ -105,6 +105,60 @@
             this.learnGroupBox.TabIndex = 1;
             this.learnGroupBox.TabStop = false;
             this.learnGroupBox.Text = "Обучение";
+            // 
+            // accTextBox
+            // 
+            this.accTextBox.Location = new System.Drawing.Point(584, 164);
+            this.accTextBox.Name = "accTextBox";
+            this.accTextBox.Size = new System.Drawing.Size(120, 20);
+            this.accTextBox.TabIndex = 30;
+            this.accTextBox.Text = "0,0001";
+            this.accTextBox.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            // 
+            // label12
+            // 
+            this.label12.AutoSize = true;
+            this.label12.Location = new System.Drawing.Point(457, 167);
+            this.label12.Name = "label12";
+            this.label12.Size = new System.Drawing.Size(120, 13);
+            this.label12.TabIndex = 29;
+            this.label12.Text = "Точность сходимости:";
+            // 
+            // optimizationSpeedTextBox
+            // 
+            this.optimizationSpeedTextBox.Location = new System.Drawing.Point(584, 112);
+            this.optimizationSpeedTextBox.Name = "optimizationSpeedTextBox";
+            this.optimizationSpeedTextBox.Size = new System.Drawing.Size(120, 20);
+            this.optimizationSpeedTextBox.TabIndex = 28;
+            this.optimizationSpeedTextBox.Text = "0,003";
+            this.optimizationSpeedTextBox.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            // 
+            // maxEpochsInput
+            // 
+            this.maxEpochsInput.Location = new System.Drawing.Point(583, 138);
+            this.maxEpochsInput.Maximum = new decimal(new int[] {
+            10000000,
+            0,
+            0,
+            0});
+            this.maxEpochsInput.Name = "maxEpochsInput";
+            this.maxEpochsInput.Size = new System.Drawing.Size(121, 20);
+            this.maxEpochsInput.TabIndex = 27;
+            this.maxEpochsInput.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            this.maxEpochsInput.Value = new decimal(new int[] {
+            10000,
+            0,
+            0,
+            0});
+            // 
+            // label11
+            // 
+            this.label11.AutoSize = true;
+            this.label11.Location = new System.Drawing.Point(408, 140);
+            this.label11.Name = "label11";
+            this.label11.Size = new System.Drawing.Size(169, 13);
+            this.label11.TabIndex = 26;
+            this.label11.Text = "Максимальное число итераций:";
             // 
             // checkButton
             // 
@@ -207,26 +261,26 @@
             this.sectionsDataGridView.AllowUserToAddRows = false;
             this.sectionsDataGridView.AllowUserToDeleteRows = false;
             this.sectionsDataGridView.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
-            dataGridViewCellStyle5.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter;
-            dataGridViewCellStyle5.BackColor = System.Drawing.SystemColors.Control;
-            dataGridViewCellStyle5.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-            dataGridViewCellStyle5.ForeColor = System.Drawing.SystemColors.WindowText;
-            dataGridViewCellStyle5.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle5.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle5.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.sectionsDataGridView.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle5;
+            dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter;
+            dataGridViewCellStyle1.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle1.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
+            dataGridViewCellStyle1.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle1.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle1.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.sectionsDataGridView.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
             this.sectionsDataGridView.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.sectionsDataGridView.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.var,
             this.varsec});
-            dataGridViewCellStyle8.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter;
-            dataGridViewCellStyle8.BackColor = System.Drawing.SystemColors.Window;
-            dataGridViewCellStyle8.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-            dataGridViewCellStyle8.ForeColor = System.Drawing.SystemColors.ControlText;
-            dataGridViewCellStyle8.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle8.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle8.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
-            this.sectionsDataGridView.DefaultCellStyle = dataGridViewCellStyle8;
+            dataGridViewCellStyle4.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter;
+            dataGridViewCellStyle4.BackColor = System.Drawing.SystemColors.Window;
+            dataGridViewCellStyle4.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
+            dataGridViewCellStyle4.ForeColor = System.Drawing.SystemColors.ControlText;
+            dataGridViewCellStyle4.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle4.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle4.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
+            this.sectionsDataGridView.DefaultCellStyle = dataGridViewCellStyle4;
             this.sectionsDataGridView.Location = new System.Drawing.Point(238, 58);
             this.sectionsDataGridView.Name = "sectionsDataGridView";
             this.sectionsDataGridView.RowHeadersVisible = false;
@@ -235,17 +289,17 @@
             // 
             // var
             // 
-            dataGridViewCellStyle6.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter;
-            dataGridViewCellStyle6.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(192)))), ((int)(((byte)(255)))));
-            this.var.DefaultCellStyle = dataGridViewCellStyle6;
+            dataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter;
+            dataGridViewCellStyle2.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(192)))), ((int)(((byte)(255)))));
+            this.var.DefaultCellStyle = dataGridViewCellStyle2;
             this.var.HeaderText = "Var";
             this.var.Name = "var";
             this.var.ReadOnly = true;
             // 
             // varsec
             // 
-            dataGridViewCellStyle7.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter;
-            this.varsec.DefaultCellStyle = dataGridViewCellStyle7;
+            dataGridViewCellStyle3.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter;
+            this.varsec.DefaultCellStyle = dataGridViewCellStyle3;
             this.varsec.HeaderText = "Parts";
             this.varsec.Name = "varsec";
             // 
@@ -370,60 +424,6 @@
             this.logTextBox.Size = new System.Drawing.Size(710, 155);
             this.logTextBox.TabIndex = 2;
             // 
-            // label11
-            // 
-            this.label11.AutoSize = true;
-            this.label11.Location = new System.Drawing.Point(408, 140);
-            this.label11.Name = "label11";
-            this.label11.Size = new System.Drawing.Size(169, 13);
-            this.label11.TabIndex = 26;
-            this.label11.Text = "Максимальное число итераций:";
-            // 
-            // maxEpochsInput
-            // 
-            this.maxEpochsInput.Location = new System.Drawing.Point(583, 138);
-            this.maxEpochsInput.Maximum = new decimal(new int[] {
-            10000000,
-            0,
-            0,
-            0});
-            this.maxEpochsInput.Name = "maxEpochsInput";
-            this.maxEpochsInput.Size = new System.Drawing.Size(121, 20);
-            this.maxEpochsInput.TabIndex = 27;
-            this.maxEpochsInput.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
-            this.maxEpochsInput.Value = new decimal(new int[] {
-            500000,
-            0,
-            0,
-            0});
-            // 
-            // optimizationSpeedTextBox
-            // 
-            this.optimizationSpeedTextBox.Location = new System.Drawing.Point(584, 112);
-            this.optimizationSpeedTextBox.Name = "optimizationSpeedTextBox";
-            this.optimizationSpeedTextBox.Size = new System.Drawing.Size(120, 20);
-            this.optimizationSpeedTextBox.TabIndex = 28;
-            this.optimizationSpeedTextBox.Text = "0,003";
-            this.optimizationSpeedTextBox.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
-            // 
-            // accTextBox
-            // 
-            this.accTextBox.Location = new System.Drawing.Point(584, 164);
-            this.accTextBox.Name = "accTextBox";
-            this.accTextBox.Size = new System.Drawing.Size(120, 20);
-            this.accTextBox.TabIndex = 30;
-            this.accTextBox.Text = "0,0001";
-            this.accTextBox.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
-            // 
-            // label12
-            // 
-            this.label12.AutoSize = true;
-            this.label12.Location = new System.Drawing.Point(457, 167);
-            this.label12.Name = "label12";
-            this.label12.Size = new System.Drawing.Size(120, 13);
-            this.label12.TabIndex = 29;
-            this.label12.Text = "Точность сходимости:";
-            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -438,9 +438,9 @@
             this.Text = "NEFClass";
             this.learnGroupBox.ResumeLayout(false);
             this.learnGroupBox.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.maxEpochsInput)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.maxRulesInput)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.sectionsDataGridView)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.maxEpochsInput)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 

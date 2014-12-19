@@ -7,21 +7,22 @@ using Logging;
 
 namespace NEFClassLib
 {
-    public class NEFClassNetwork
+    public class NEFClassMNetwork
     {
-        private const string LOG_TAG = "NEFClassNetwork";
+        private const string LOG_TAG = "NEFClassMNetwork";
 
         private double[] mInputLayer;
         private double[] mHiddenLayer;
         private double[] mOutputLayer;
 
-        private int[] mMinAncedent;
-
-        private Partition[] mPartitions;
+        private GaussPartition[] mPartitions;
         private Rule[] mRules;
+        private double[] mConclusionWeights;
         private string[] mClassNames;
 
-        public NEFClassNetwork(NCDataSet trainDataset, TrainConfiguration trainConfig)
+        private int[] mMaxIndices;
+
+        public NEFClassMNetwork(NCDataSet trainDataset, TrainConfiguration trainConfig)
         {
             Log.LogMessage(LOG_TAG, "Начало обучения.");
 
@@ -29,14 +30,14 @@ namespace NEFClassLib
 
             mInputLayer = new double[trainDataset.Dimension];
             mOutputLayer = new double[mClassNames.Length];
+            mMaxIndices = new int[mClassNames.Length];
 
-            mPartitions = new Partition[trainDataset.Dimension];
+            mPartitions = new GaussPartition[trainDataset.Dimension];
             for (int i = 0; i < trainDataset.Dimension; ++i)
-                mPartitions[i] = new Partition(trainDataset.GetAttributeBounds(i), trainConfig.FuzzyPartsCount[i]);
+                mPartitions[i] = new GaussPartition(trainDataset.GetAttributeBounds(i), trainConfig.FuzzyPartsCount[i]);
 
             CreateRulesBase(trainDataset, trainConfig);
             mHiddenLayer = new double[mRules.Length];
-            mMinAncedent = new int[mRules.Length];
 
             if (trainConfig.DoOptimization)
                 TrainRules(trainDataset, trainConfig);
@@ -48,18 +49,19 @@ namespace NEFClassLib
             double err = 0, prevErr = 0;
             do
             {
-                prevErr = err;
-                err = 0;
-                int misClassed = 0;
+                prevErr = err; err = 0;
+                List<int> indices = new List<int>();
+                for (int i = 0; i < trainDataset.Length; ++i)
+                    indices.Add(i);
+
+                Random random = new Random();
                 for (int i = 0; i < trainDataset.Length; ++i)
                 {
-                    bool isCorrect = true;
-                    double patternError = 0;
-                    AdaptByPattern(trainDataset[i], trainConfig, out patternError, out isCorrect);
+                    int patternIndex = random.Next(indices.Count);
+                    NCEntity pattern = trainDataset[patternIndex];
+                    indices.Remove(patternIndex);
 
-                    err += patternError;
-                    if (!isCorrect)
-                        ++misClassed;
+                    AdaptByPattern(pattern, trainConfig);
                 }
 
                 int misClassedFinal = 0;
@@ -81,7 +83,78 @@ namespace NEFClassLib
                 err /= trainDataset.Length;
                 if ((iteration + 1) % 10 == 0)
                     Log.LogMessage(LOG_TAG, "It: {0}. Error: {1}, MisClassed: {2}", iteration + 1, err.ToString("0.######"), misClassedFinal);
+
+                // trainConfig.OptimizationSpeed *= Math.Exp(-iteration / 100);
+
             } while (++iteration <= trainConfig.MaxIterations && Math.Abs(err - prevErr) > trainConfig.Accuracy);
+        }
+
+        private double dE_dA(int i, int j, int resultClass)
+        {
+            double result = 0;
+
+            double[] targetOutput = new double[mOutputLayer.Length];
+            targetOutput[resultClass] = 1.0;
+
+            for (int k = 0; k < mOutputLayer.Length; ++k)
+            {
+                int maxInd = mMaxIndices[k];
+                result += (targetOutput[k] - mOutputLayer[k]) * mConclusionWeights[maxInd] * (mRules[maxInd].Antecedents[i] == j ? mHiddenLayer[maxInd] : 0);
+            }
+
+            result *= (-2) * (mInputLayer[i] - mPartitions[i][j].A) / (mPartitions[i][j].B * mPartitions[i][j].B);
+
+            return result;
+        }
+
+        private double dE_dB(int i, int j, int resultClass)
+        {
+            double result = 0;
+
+            double[] targetOutput = new double[mOutputLayer.Length];
+            targetOutput[resultClass] = 1.0;
+
+            for (int k = 0; k < mOutputLayer.Length; ++k)
+            {
+                int maxInd = mMaxIndices[k];
+                result += (targetOutput[k] - mOutputLayer[k]) * mConclusionWeights[maxInd] * (mRules[maxInd].Antecedents[i] == j ? 1 : 0);
+            }
+
+            result *= (-2) * (mInputLayer[i] - mPartitions[i][j].A) * (mInputLayer[i] - mPartitions[i][j].A) / (mPartitions[i][j].B * mPartitions[i][j].B * mPartitions[i][j].B);
+
+            return result;
+        }
+
+        private double dE_dW(int j, int k, int resultClass)
+        {
+            return (-2) * ((resultClass == k ? 1 : 0) - mOutputLayer[k]) * mHiddenLayer[j];
+        }
+
+        private void AdaptByPattern(NCEntity pattern, TrainConfiguration config)
+        {
+            Propagate(pattern);
+
+            for (int i = 0; i < mPartitions.Length; ++i)
+            {
+                for (int j = 0; j < mPartitions[i].PartitionSize; ++j)
+                {
+                    GaussFuzzyNumber fuzzyNumber = mPartitions[i][j];
+
+                    double deltaA = -config.OptimizationSpeed * dE_dA(i, j, GetClassIndex(pattern.Class));
+                    double deltaB = -config.OptimizationSpeed * dE_dB(i, j, GetClassIndex(pattern.Class));
+
+                    mPartitions[i].Adapt(j, deltaA, deltaB);
+                }
+            }
+
+            Propagate(pattern);
+
+            for (int k = 0; k < mOutputLayer.Length; ++k)
+            {
+                int maxInd = mMaxIndices[k];
+                double deltaW = -config.OptimizationSpeed * 0.1 * dE_dW(maxInd, k, GetClassIndex(pattern.Class));
+                mConclusionWeights[maxInd] += deltaW;
+            }
         }
 
         private void CreateRulesBase(NCDataSet trainDataset, TrainConfiguration trainConfig)
@@ -94,6 +167,10 @@ namespace NEFClassLib
                 mRules = CreateRulesBestPerClass(trainDataset, trainConfig);
             else
                 throw new ArgumentException("Wrong rules train algorithm: " + trainConfig.RulesTrainAlgo);
+
+            mConclusionWeights = new double[mRules.Length];
+            for (int i = 0; i < mConclusionWeights.Length; ++i)
+                mConclusionWeights[i] = 1.0;
         }
 
         private Rule[] CreateRulesFromDataset(NCDataSet trainDataset, int maxRules)
@@ -191,7 +268,7 @@ namespace NEFClassLib
                     double activation = 1;
                     for (int j = 0; j < entity.Dimension; ++j)
                         activation = Math.Min(activation, mPartitions[j].GetMembershipVector(entity[j])[rules[r].Antecedents[j]]);
-                    
+
                     performance[r] += activation * (rules[r].ResultClass == GetClassIndex(entity.Class) ? 1 : -1);
                 }
             }
@@ -226,7 +303,7 @@ namespace NEFClassLib
 
             Log.LogMessage(LOG_TAG, "Отобрано {0} лучших правил.", resultRules.Count);
             Log.LogMessage(LOG_TAG, "База правил сгенерирована.");
-            
+
             return resultRules.ToArray();
         }
 
@@ -280,83 +357,6 @@ namespace NEFClassLib
             return resultRules.ToArray();
         }
 
-        private void Propagate(NCEntity entity)
-        {
-            for (int i = 0; i < entity.Dimension; ++i)
-                mInputLayer[i] = entity[i];
-
-            double[][] membership = new double[entity.Dimension][];
-            for (int i = 0; i < entity.Dimension; ++i)
-                membership[i] = mPartitions[i].GetMembershipVector(entity[i]);
-
-            for (int i = 0; i < mRules.Length; ++i)
-            {
-                double activation = 1;
-                for (int j = 0; j < mInputLayer.Length; ++j)
-                    if (membership[j][mRules[i].Antecedents[j]] < activation)
-                    {
-                        activation = membership[j][mRules[i].Antecedents[j]];
-                        mMinAncedent[i] = j;
-                    }
-
-                mHiddenLayer[i] = activation;
-            }
-
-            for (int i = 0; i < mOutputLayer.Length; ++i)
-            {
-                mOutputLayer[i] = 0;
-                for (int r = 0; r < mRules.Length; ++r)
-                {
-                    if (mRules[r].ResultClass != i)
-                        continue;
-
-                    mOutputLayer[i] = Math.Max(mOutputLayer[i], mHiddenLayer[r]);
-                }
-            }
-        }
-        
-        private void AdaptByPattern(NCEntity pattern, TrainConfiguration trainConfig, out double error, out bool isCorrect)
-        {
-            Propagate(pattern);
-
-            int maxIndex = 0;
-            for (int i = 0; i < mOutputLayer.Length; ++i)
-                if (mOutputLayer[i] > mOutputLayer[maxIndex])
-                    maxIndex = i;
-
-            isCorrect = (GetClassName(maxIndex) == pattern.Class) && (mOutputLayer[maxIndex] > 0);
-
-            double[] targetOutput = new double[mOutputLayer.Length];
-            double[] deltaOut = new double[mOutputLayer.Length];
-
-            targetOutput[GetClassIndex(pattern.Class)] = 1;
-            for (int i = 0; i < mOutputLayer.Length; ++i)
-                deltaOut[i] = targetOutput[i] - mOutputLayer[i];
-            
-            for (int r = 0; r < mRules.Length; ++r)
-            {
-                if (mHiddenLayer[r] > 0)
-                {
-                    double[] deltaHidden = new double[mHiddenLayer.Length];
-                    deltaHidden[r] = deltaOut[mRules[r].ResultClass] * mHiddenLayer[r] * (1 - mHiddenLayer[r]);
-
-                    int minAncedent = mMinAncedent[r];
-                    TriangleFuzzyNumber fuzzyPart = mPartitions[minAncedent][mRules[r].Antecedents[minAncedent]];
-
-                    double factor = deltaHidden[r] * (fuzzyPart.Right - fuzzyPart.Left);
-                    double deltaB = trainConfig.OptimizationSpeed * factor * Math.Sign(mInputLayer[minAncedent] - fuzzyPart.MainValue);
-                    double deltaA = -trainConfig.OptimizationSpeed * factor + deltaB;
-                    double deltaC = trainConfig.OptimizationSpeed * factor + deltaB;
-
-                    mPartitions[minAncedent].Adapt(mRules[r].Antecedents[minAncedent], deltaA, deltaB, deltaC);
-                }
-            }
-
-            error = 0.0;
-            for (int i = 0; i < mOutputLayer.Length; ++i)
-                error += deltaOut[i] * deltaOut[i];
-        }
-
         public int GetClassIndex(string cls)
         {
             for (int i = 0; i < mClassNames.Length; ++i)
@@ -390,6 +390,42 @@ namespace NEFClassLib
         {
             Propagate(entity);
             return mOutputLayer;
+        }
+
+        private void Propagate(NCEntity entity)
+        {
+            for (int i = 0; i < entity.Dimension; ++i)
+                mInputLayer[i] = entity[i];
+
+            double[][] membership = new double[entity.Dimension][];
+            for (int i = 0; i < entity.Dimension; ++i)
+                membership[i] = mPartitions[i].GetMembershipVector(entity[i]);
+
+            for (int i = 0; i < mRules.Length; ++i)
+            {
+                double activation = 1;
+                for (int j = 0; j < mInputLayer.Length; ++j)
+                    activation *= membership[j][mRules[i].Antecedents[j]];
+
+                mHiddenLayer[i] = activation;
+            }
+
+            for (int i = 0; i < mOutputLayer.Length; ++i)
+            {
+                mOutputLayer[i] = 0;
+                mMaxIndices[i] = 0;
+                for (int r = 0; r < mRules.Length; ++r)
+                {
+                    if (mRules[r].ResultClass != i)
+                        continue;
+
+                    if (mConclusionWeights[mMaxIndices[i]] * mHiddenLayer[mMaxIndices[i]] < mConclusionWeights[r] * mHiddenLayer[r])
+                    {
+                        mMaxIndices[i] = r;
+                        mOutputLayer[i] = mConclusionWeights[r] * mHiddenLayer[r];
+                    }
+                }
+            }
         }
     }
 }

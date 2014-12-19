@@ -6,19 +6,20 @@ using System.Threading.Tasks;
 
 namespace NEFClassLib
 {
-    public class Partition
+    class GaussPartition
     {
         private Bounds mBounds;
-        private TriangleFuzzyNumber[] mFuzzyParts;
+        private GaussFuzzyNumber[] mFuzzyParts;
 
-        public Partition(Bounds bounds, int fuzzyPartsCount)
+        public GaussPartition(Bounds bounds, int fuzzyPartsCount)
         {
             mBounds = bounds;
-            mFuzzyParts = new TriangleFuzzyNumber[fuzzyPartsCount];
+            mFuzzyParts = new GaussFuzzyNumber[fuzzyPartsCount];
 
-            double width = (bounds.MaxValue - bounds.MinValue) / (fuzzyPartsCount + 1);
+            double b1 = (bounds.MaxValue - bounds.MinValue) / (fuzzyPartsCount + 1);
+            double b = b1 / Math.Sqrt(2 * Math.Log(2));
             for (int i = 0; i < fuzzyPartsCount; ++i)
-                mFuzzyParts[i] = new TriangleFuzzyNumber(bounds.MinValue + i * width, bounds.MinValue + (i + 1) * width, bounds.MinValue + (i + 2) * width, i == 0, i == fuzzyPartsCount - 1);
+                mFuzzyParts[i] = new GaussFuzzyNumber(bounds.MinValue + (i + 1) * b1, b, i == 0, i == fuzzyPartsCount - 1);
         }
 
         public double[] GetMembershipVector(double x)
@@ -55,12 +56,9 @@ namespace NEFClassLib
             return maxIndex;
         }
 
-        public void Adapt(int index, double deltaA, double deltaB, double deltaC)
+        public void Adapt(int index, double deltaA, double deltaB)
         {
-            if ((mFuzzyParts[index].Left + deltaA) < mBounds.MinValue) deltaA = 0.0;
-            if ((mFuzzyParts[index].Right + deltaC) > mBounds.MaxValue) deltaC = 0.0; 
-            
-            mFuzzyParts[index].Adapt(deltaA, deltaB, deltaC);
+            mFuzzyParts[index].Adapt(deltaA, deltaB);
         }
 
         public int PartitionSize
@@ -68,7 +66,7 @@ namespace NEFClassLib
             get { return mFuzzyParts.Length; }
         }
 
-        public TriangleFuzzyNumber this[int index]
+        public GaussFuzzyNumber this[int index]
         {
             get { return mFuzzyParts[index]; }
         }

@@ -78,7 +78,7 @@ namespace NEFClass
                 config.FuzzyPartsCount[i] = Convert.ToInt32(this.sectionsDataGridView[1, i].Value);
 
             config.RulesTrainAlgo = rulesAlgoComboBox.SelectedValue.ToString();
-            config.OptimizationSpeed = Convert.ToDouble(optimizationSpeedTextBox.Text);
+            config.OptimizationSpeed = Convert.ToDouble(optimizationSpeedTextBox.Text.Replace(".", ","));
             config.MaxIterations = Convert.ToInt32(maxEpochsInput.Value);
             config.Accuracy = Convert.ToDouble(accTextBox.Text); ;
 
@@ -107,7 +107,8 @@ namespace NEFClass
                 double rmse = 0;
                 for (int i = 0; i < dataset.Length; ++i)
                 {
-                    if (dataset[i].Class == network.Classify(dataset[i]))
+                    string result = network.Classify(dataset[i]);
+                    if (dataset[i].Class == result)
                         ++goodCount;
 
                     double[] desiredOutput = new double[dataset.GetClassesList().Length];
@@ -118,7 +119,10 @@ namespace NEFClass
                         rmse += (desiredOutput[z] - output[z]) * (desiredOutput[z] - output[z]);
                 }
 
-                MessageBox.Show(String.Format("Размер выборки: {0}\nТочность: {1}%\nНеудачных попыток: {2}\nError: {3}", dataset.Length, (goodCount * 100.0 / dataset.Length).ToString("0.##"), dataset.Length - goodCount, (Math.Sqrt(rmse) / dataset.Length).ToString("0.####")), "Результаты");
+                rmse /= dataset.Length;
+
+                string results = String.Format("Размер выборки: {0}\nТочность: {1}%\nНеудачных попыток: {2}\nError: {3}", dataset.Length, (goodCount * 100.0 / dataset.Length).ToString("0.##"), dataset.Length - goodCount, rmse.ToString("0.##"));
+                MessageBox.Show(results, "Результаты");
             }
         }
     }
