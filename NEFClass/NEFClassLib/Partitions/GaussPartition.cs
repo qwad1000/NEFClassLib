@@ -1,12 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using NEFClassLib.FuzzyNumbers;
 
-namespace NEFClassLib
+namespace NEFClassLib.Partitions
 {
-    class GaussPartition
+    public class GaussPartition : IPartition<GaussFuzzyNumber>
     {
         private Bounds mBounds;
         private GaussFuzzyNumber[] mFuzzyParts;

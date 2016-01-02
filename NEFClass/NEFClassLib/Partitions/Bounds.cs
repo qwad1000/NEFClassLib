@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace NEFClassLib
+namespace NEFClassLib.Partitions
 {
     public struct Bounds
     {

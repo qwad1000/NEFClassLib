@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace NEFClassLib
+namespace NEFClassLib.FuzzyNumbers
 {
-    public class TriangleFuzzyNumber
+    public class TriangleFuzzyNumber : IFuzzyNumber
     {
         private const double MIN_WIDTH = 0.1;
 

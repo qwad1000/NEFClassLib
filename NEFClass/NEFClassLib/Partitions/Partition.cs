@@ -1,12 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using NEFClassLib.FuzzyNumbers;
 
-namespace NEFClassLib
+namespace NEFClassLib.Partitions
 {
-    public class Partition
+    public class Partition : IPartition<TriangleFuzzyNumber>
     {
         private Bounds mBounds;
         private TriangleFuzzyNumber[] mFuzzyParts;
