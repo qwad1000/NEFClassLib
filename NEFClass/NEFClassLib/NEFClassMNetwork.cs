@@ -79,6 +79,7 @@ namespace NEFClassLib
             } while (++iteration <= trainConfig.MaxIterations && Math.Abs(err - prevErr) > trainConfig.Accuracy);
         }
 
+
         private void AdaptByPattern(NCEntity pattern, TrainConfiguration config)
         {
             Propagate(pattern);
@@ -98,21 +99,12 @@ namespace NEFClassLib
 
             Propagate(pattern);
 
-            for (int k = 0; k < mOutputLayer.Length; ++k)
+			for (int i = 0; i < mOutputLayer.Length; ++i)
             {
-                int maxInd = mMaxIndices[k];
-                double deltaW = -config.OptimizationSpeed * 0.1 * dE_dW(maxInd, k, GetClassIndex(pattern.Class));
+                int maxInd = mMaxIndices[i];
+                double deltaW = -config.OptimizationSpeed * 0.1 * dE_dW(maxInd, i, GetClassIndex(pattern.Class));
                 mConclusionWeights[maxInd] += deltaW;
             }
-        }
-
-        protected override void CreateRulesBase(NCDataSet trainDataset, TrainConfiguration trainConfig)
-        {
-            base.CreateRulesBase(trainDataset, trainConfig);
-            
-            mConclusionWeights = new double[mRules.Length];
-            for (int i = 0; i < mConclusionWeights.Length; ++i)
-                mConclusionWeights[i] = 1.0;
         }
 
         protected override void Propagate(NCEntity entity)
@@ -150,6 +142,16 @@ namespace NEFClassLib
                 }
             }
         }
+
+		protected override void CreateRulesBase(NCDataSet trainDataset, TrainConfiguration trainConfig)
+		{
+			base.CreateRulesBase(trainDataset, trainConfig);
+
+			Console.WriteLine("CreateRulesBase from NEFClassMNetwork");
+			mConclusionWeights = new double[mRules.Length];
+			for (int i = 0; i < mConclusionWeights.Length; ++i)
+				mConclusionWeights[i] = 1.0;
+		}
 
         private double dE_dA(int i, int j, int resultClass)
         {

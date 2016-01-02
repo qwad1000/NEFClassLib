@@ -72,41 +72,6 @@ namespace NEFClassLib
                     Log.LogMessage(LOG_TAG, "It: {0}. Error: {1}, MisClassed: {2}", iteration + 1, err.ToString("0.######"), misClassedFinal);
             } while (++iteration <= trainConfig.MaxIterations && Math.Abs(err - prevErr) > trainConfig.Accuracy);
         }
-
-        protected override void Propagate(NCEntity entity)
-        {
-            for (int i = 0; i < entity.Dimension; ++i)
-                mInputLayer[i] = entity[i];
-
-            double[][] membership = new double[entity.Dimension][];
-            for (int i = 0; i < entity.Dimension; ++i)
-                membership[i] = mPartitions[i].GetMembershipVector(entity[i]);
-
-            for (int i = 0; i < mRules.Length; ++i)
-            {
-                double activation = 1;
-                for (int j = 0; j < mInputLayer.Length; ++j)
-                    if (membership[j][mRules[i].Antecedents[j]] < activation)
-                    {
-                        activation = membership[j][mRules[i].Antecedents[j]];
-                        mMinAncedent[i] = j;
-                    }
-
-                mHiddenLayer[i] = activation;
-            }
-
-            for (int i = 0; i < mOutputLayer.Length; ++i)
-            {
-                mOutputLayer[i] = 0;
-                for (int r = 0; r < mRules.Length; ++r)
-                {
-                    if (mRules[r].ResultClass != i)
-                        continue;
-
-                    mOutputLayer[i] = Math.Max(mOutputLayer[i], mHiddenLayer[r]);
-                }
-            }
-        }
         
         private void AdaptByPattern(NCEntity pattern, TrainConfiguration trainConfig, out double error, out bool isCorrect)
         {
@@ -148,6 +113,41 @@ namespace NEFClassLib
             error = 0.0;
             for (int i = 0; i < mOutputLayer.Length; ++i)
                 error += deltaOut[i] * deltaOut[i];
+        }
+
+        protected override void Propagate(NCEntity entity)
+        {
+            for (int i = 0; i < entity.Dimension; ++i)
+                mInputLayer[i] = entity[i];
+
+            double[][] membership = new double[entity.Dimension][];
+            for (int i = 0; i < entity.Dimension; ++i)
+                membership[i] = mPartitions[i].GetMembershipVector(entity[i]);
+
+            for (int i = 0; i < mRules.Length; ++i)
+            {
+                double activation = 1;
+                for (int j = 0; j < mInputLayer.Length; ++j)
+                    if (membership[j][mRules[i].Antecedents[j]] < activation)
+                    {
+                        activation = membership[j][mRules[i].Antecedents[j]];
+                        mMinAncedent[i] = j;
+                    }
+
+                mHiddenLayer[i] = activation;
+            }
+
+            for (int i = 0; i < mOutputLayer.Length; ++i)
+            {
+                mOutputLayer[i] = 0;
+                for (int r = 0; r < mRules.Length; ++r)
+                {
+                    if (mRules[r].ResultClass != i)
+                        continue;
+
+                    mOutputLayer[i] = Math.Max(mOutputLayer[i], mHiddenLayer[r]);
+                }
+            }
         }
     }
 }
