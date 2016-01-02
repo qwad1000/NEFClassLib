@@ -49,16 +49,21 @@ namespace NEFClassLib
             this.mEntities = new NCEntity[rawData.Length];
             for (int i = 0; i < rawData.Length; ++i)
             {
-                string[] entityData = rawData[i].Split(";".ToCharArray());
+                string[] entityData = rawData[i].Split(",".ToCharArray());
                 double[] attributes = new double[entityData.Length - 1];
 
                 int classIndex = entityData.Length - 1;
                 string entityClass = entityData[classIndex];
 
-                for (int j = 0; j < attributes.Length; ++j)
-                    attributes[j] = Convert.ToDouble(entityData[j].Replace('.', ','));
-
-                this.mEntities[i] = new NCEntity(attributes, entityClass);
+                for (int j = 0; j < attributes.Length; ++j) {
+                    //attributes [j] = Double.TryParse (entityData [j]);//.ToDouble(entityData[j].Replace('.', ','));
+                    double parced = 0.0;
+                    if (Double.TryParse (entityData [j], out parced))
+                        attributes [j] = parced;
+                }
+                if (attributes.Length > 0) {
+                    this.mEntities [i] = new NCEntity (attributes, entityClass);
+                }
             }
         }
 
@@ -84,8 +89,12 @@ namespace NEFClassLib
 
             for (int i = 1; i < mEntities.Length; ++i)
             {
-                minValue = Math.Min(minValue, mEntities[i][attributeIndex]);
-                maxValue = Math.Max(maxValue, mEntities[i][attributeIndex]);
+                if (mEntities [i].Dimension > attributeIndex) {
+                    minValue = Math.Min (minValue, mEntities [i] [attributeIndex]);
+                    maxValue = Math.Max (maxValue, mEntities [i] [attributeIndex]);
+                } else {
+                    System.Console.WriteLine ("Problem");
+                }
             }
 
             return new Bounds(minValue, maxValue);
