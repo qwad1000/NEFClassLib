@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Logging;
-using NEFClassLib.Partitions;
 using NEFClassLib.FuzzyNumbers;
+using NEFClassLib.Partitions;
+using NEFClassLib.Solvers;
 
 namespace NEFClassLib
 {
@@ -30,7 +32,7 @@ namespace NEFClassLib
             mHiddenLayer = new double[mRules.Length];
 
             if (trainConfig.DoOptimization)
-                TrainRules(trainDataset, trainConfig);
+                TrainRulesConjuaate(trainDataset, trainConfig);
         }
 
         private void TrainRules(NCDataSet trainDataset, TrainConfiguration trainConfig)
@@ -55,23 +57,9 @@ namespace NEFClassLib
                 }
 
                 int misClassedFinal = 0;
-                for (int i = 0; i < trainDataset.Length; ++i)
-                {
-                    string result = Classify(trainDataset[i]);
-                    bool isCorrect = (result == trainDataset[i].Class);
+                err = getFullError(trainDataset, ref misClassedFinal);
 
-                    if (!isCorrect)
-                        ++misClassedFinal;
-
-                    double[] targetOutput = new double[mOutputLayer.Length];
-                    targetOutput[GetClassIndex(trainDataset[i].Class)] = 1.0;
-
-                    for (int z = 0; z < mOutputLayer.Length; ++z)
-                        err += (mOutputLayer[z] - targetOutput[z]) * (mOutputLayer[z] - targetOutput[z]);
-                }
-
-                err /= trainDataset.Length;
-                if ((iteration + 1) % 10 == 0)
+                // if ((iteration + 1) % 10 == 0)
                     Log.LogMessage(LOG_TAG, "It: {0}. Error: {1}, MisClassed: {2}", iteration + 1, err.ToString("0.######"), misClassedFinal);
 
                 // trainConfig.OptimizationSpeed *= Math.Exp(-iteration / 100);
@@ -79,6 +67,111 @@ namespace NEFClassLib
             } while (++iteration <= trainConfig.MaxIterations && Math.Abs(err - prevErr) > trainConfig.Accuracy);
         }
 
+        private static GaussPartition[] CopyPartitions(GaussPartition[] partitions)
+        {
+            GaussPartition[] newpartitions = new GaussPartition[partitions.Length];
+            for (int i = 0; i < partitions.Length; i++)
+                newpartitions [i] = new GaussPartition (partitions [i]);
+
+            return newpartitions;
+        }
+
+        private void TrainRulesConjugate(NCDataSet trainDataset, TrainConfiguration trainConfig){
+            int iteration = 0;
+
+            GaussPartition[] previousIterationPartitions;
+            List<int> gradientDimensions = Enumerable.Range(0, mPartitions.Length).Select(x => mPartitions[x].PartitionSize).ToList();
+            int moduloDimension = gradientDimensions.Sum();//mPartitions.Length;
+            GradientContainer direction_a = null, direction_b = null;// = new GradientContainer (trainDataset, mPartitions.Length, gradientDimensions, dE_dA, GetClassIndex, Propagate);
+
+            double norm_a = 0.0, norm_b = 0.0;
+            double err = 0, prevErr;
+            do {
+                if(iteration % moduloDimension == 0){
+                    direction_a = new GradientContainer(trainDataset, mPartitions.Length, gradientDimensions, dE_dA, GetClassIndex, Propagate);
+                    norm_a = direction_a.Norm();
+                    direction_a.NormalizeWith(-norm_a);
+                    direction_b = new GradientContainer(trainDataset, mPartitions.Length, gradientDimensions, dE_dB, GetClassIndex, Propagate);
+                    norm_b = direction_b.Norm();
+                    direction_b.NormalizeWith(-norm_b);
+                } else {
+                    GradientContainer gradient_a = new GradientContainer(trainDataset, mPartitions.Length, gradientDimensions, dE_dA, GetClassIndex, Propagate);
+                    GradientContainer gradient_b = new GradientContainer(trainDataset, mPartitions.Length, gradientDimensions, dE_dB, GetClassIndex, Propagate);
+
+                    double current_norm_a = gradient_a.Norm();
+                    double current_norm_b = gradient_b.Norm();
+                    double beta_a = Math.Pow(current_norm_a, 2) / Math.Pow(norm_a, 2);
+                    double beta_b = Math.Pow(current_norm_b, 2) / Math.Pow(norm_b, 2);
+
+
+                    gradient_a.EqualSum(-1.0, beta_a, direction_a);
+                    gradient_b.EqualSum(-1.0, beta_b, direction_b);
+                    gradient_a.Normalize();
+                    gradient_b.Normalize();
+
+                    direction_a = gradient_a;
+                    direction_b = gradient_b;
+                    norm_a = current_norm_a;
+                    norm_b = current_norm_b;
+                }
+
+
+                previousIterationPartitions = mPartitions;
+
+                prevErr = err;
+                err = 0;
+
+                Func<double, double> errorFunc = alpha => {
+                    mPartitions = CopyPartitions(previousIterationPartitions);
+                    WeightsEqPlusGrad(alpha, direction_a, direction_b);
+
+                    int _misclassed = 0;
+                    return getFullError(trainDataset, ref _misclassed);
+                };
+
+                double resultalpha = GoldenEquationSolver.Solve(errorFunc, -1.0, 1.0);
+
+                mPartitions = previousIterationPartitions;
+                WeightsEqPlusGrad(resultalpha, direction_a, direction_b);
+                int misclassed = 0;
+                err = getFullError(trainDataset, ref misclassed);
+
+                Log.LogMessage(LOG_TAG, "It: {0}. Error: {1}, MisClassed: {2}, alpha: {3}", iteration, err.ToString("0.######"), misclassed, resultalpha.ToString("0.#####"));
+            } while(++iteration <= trainConfig.MaxIterations && Math.Abs (err - prevErr) > trainConfig.Accuracy);
+        }
+
+        private void WeightsEqPlusGrad(double alpha, GradientContainer gradA, GradientContainer gradB)
+        {
+            for (int i = 0; i < mPartitions.Length; i++) {
+                for (int j = 0; j < mPartitions[i].PartitionSize; j++) {
+                    double deltaA = alpha * gradA.arr[i][j];
+                    double deltaB = alpha * gradB.arr[i][j];
+
+                    mPartitions[i].Adapt(j, deltaA, deltaB);
+                }
+            }
+        }
+
+        private double getFullError(NCDataSet dataset, ref int misClassed)
+        {
+            double err = 0.0;
+            for (int i=0; i<dataset.Length; ++i) {
+                NCEntity entity = dataset [i];
+
+                string result = Classify (entity);
+                bool isCorrect = (result == entity.Class);
+
+                if (!isCorrect)
+                    ++misClassed;
+
+                double[] targetOutput = new double[mOutputLayer.Length];
+                targetOutput[GetClassIndex(entity.Class)] = 1.0;
+
+                for (int z = 0; z < mOutputLayer.Length; ++z)
+                    err += Math.Pow(mOutputLayer[z] - targetOutput[z], 2);
+            }
+            return err /= dataset.Length;
+        }
 
         private void AdaptByPattern(NCEntity pattern, TrainConfiguration config)
         {
@@ -88,8 +181,6 @@ namespace NEFClassLib
             {
                 for (int j = 0; j < mPartitions[i].PartitionSize; ++j)
                 {
-                    GaussFuzzyNumber fuzzyNumber = mPartitions[i][j];
-
                     double deltaA = -config.OptimizationSpeed * dE_dA(i, j, GetClassIndex(pattern.Class));
                     double deltaB = -config.OptimizationSpeed * dE_dB(i, j, GetClassIndex(pattern.Class));
 
@@ -99,7 +190,7 @@ namespace NEFClassLib
 
             Propagate(pattern);
 
-			for (int i = 0; i < mOutputLayer.Length; ++i)
+            for (int i = 0; i < mOutputLayer.Length; ++i)
             {
                 int maxInd = mMaxIndices[i];
                 double deltaW = -config.OptimizationSpeed * 0.1 * dE_dW(maxInd, i, GetClassIndex(pattern.Class));
@@ -143,15 +234,15 @@ namespace NEFClassLib
             }
         }
 
-		protected override void CreateRulesBase(NCDataSet trainDataset, TrainConfiguration trainConfig)
-		{
-			base.CreateRulesBase(trainDataset, trainConfig);
+        protected override void CreateRulesBase(NCDataSet trainDataset, TrainConfiguration trainConfig)
+        {
+            base.CreateRulesBase(trainDataset, trainConfig);
 
-			Console.WriteLine("CreateRulesBase from NEFClassMNetwork");
-			mConclusionWeights = new double[mRules.Length];
-			for (int i = 0; i < mConclusionWeights.Length; ++i)
-				mConclusionWeights[i] = 1.0;
-		}
+            Console.WriteLine("CreateRulesBase from NEFClassMNetwork");
+            mConclusionWeights = new double[mRules.Length];
+            for (int i = 0; i < mConclusionWeights.Length; ++i)
+                mConclusionWeights[i] = 1.0;
+        }
 
         private double dE_dA(int i, int j, int resultClass)
         {
@@ -163,10 +254,11 @@ namespace NEFClassLib
             for (int k = 0; k < mOutputLayer.Length; ++k)
             {
                 int maxInd = mMaxIndices[k];
-                result += (targetOutput[k] - mOutputLayer[k]) * mConclusionWeights[maxInd] * (mRules[maxInd].Antecedents[i] == j ? mHiddenLayer[maxInd] : 0);
+                var v = mRules [maxInd].Antecedents [i] == j ? mHiddenLayer [maxInd] : 0;
+                result += (targetOutput[k] - mOutputLayer[k]) * mConclusionWeights[maxInd] * v; 
             }
 
-            result *= (-2) * (mInputLayer[i] - mPartitions[i][j].A) / (mPartitions[i][j].B * mPartitions[i][j].B);
+            result *= (-2) * (mInputLayer[i] - mPartitions[i][j].A) / Math.Pow (mPartitions[i][j].B, 2);
 
             return result;
         }
@@ -181,10 +273,11 @@ namespace NEFClassLib
             for (int k = 0; k < mOutputLayer.Length; ++k)
             {
                 int maxInd = mMaxIndices[k];
-                result += (targetOutput[k] - mOutputLayer[k]) * mConclusionWeights[maxInd] * (mRules[maxInd].Antecedents[i] == j ? 1 : 0);
+                var v = mRules [maxInd].Antecedents [i] == j ? 1 : 0; // TODO: check hiddenlayer not 1;
+                result += (targetOutput[k] - mOutputLayer[k]) * mConclusionWeights[maxInd] * v;
             }
 
-            result *= (-2) * (mInputLayer[i] - mPartitions[i][j].A) * (mInputLayer[i] - mPartitions[i][j].A) / (mPartitions[i][j].B * mPartitions[i][j].B * mPartitions[i][j].B);
+            result *= (-2) * Math.Pow(mInputLayer[i] - mPartitions[i][j].A, 2) / Math.Pow(mPartitions[i][j].B, 3);
 
             return result;
         }

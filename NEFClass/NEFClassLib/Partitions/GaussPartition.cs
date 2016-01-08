@@ -5,18 +5,26 @@ namespace NEFClassLib.Partitions
 {
     public class GaussPartition : IPartition<GaussFuzzyNumber>
     {
-        private Bounds mBounds;
+        // private Bounds mBounds;
         private GaussFuzzyNumber[] mFuzzyParts;
 
         public GaussPartition(Bounds bounds, int fuzzyPartsCount)
         {
-            mBounds = bounds;
+            // mBounds = bounds;
             mFuzzyParts = new GaussFuzzyNumber[fuzzyPartsCount];
 
             double b1 = (bounds.MaxValue - bounds.MinValue) / (fuzzyPartsCount + 1);
             double b = b1 / Math.Sqrt(2 * Math.Log(2));
             for (int i = 0; i < fuzzyPartsCount; ++i)
                 mFuzzyParts[i] = new GaussFuzzyNumber(bounds.MinValue + (i + 1) * b1, b, i == 0, i == fuzzyPartsCount - 1);
+        }
+
+        public GaussPartition(GaussPartition other)
+        {
+            int fuzzyPartsCount = other.mFuzzyParts.Length;
+            mFuzzyParts = new GaussFuzzyNumber[fuzzyPartsCount];
+            for (int i = 0; i < fuzzyPartsCount; i++)
+                mFuzzyParts[i] = new GaussFuzzyNumber(other.mFuzzyParts[i]);
         }
 
         public double[] GetMembershipVector(double x)

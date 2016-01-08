@@ -10,7 +10,7 @@ namespace NEFClassLib.FuzzyNumbers
     {
         private const double MIN_WIDTH = 0.1;
 
-        private double mLeft;   
+        private double mLeft;
         private double mMainValue;
         private double mRight;
 
@@ -49,7 +49,7 @@ namespace NEFClassLib.FuzzyNumbers
             if (mLeftShouldered || (mLeft + deltaA) > (mMainValue - MIN_WIDTH)) deltaA = 0.0;
             if (mRightShouldered || (mRight + deltaC) < (mMainValue + MIN_WIDTH)) deltaC = 0.0;
             if ((mLeft + deltaA + MIN_WIDTH) > (mMainValue + deltaB) ||
-                (mRight + deltaC - MIN_WIDTH) < (mMainValue + deltaB)) deltaB = 0.0; 
+                (mRight + deltaC - MIN_WIDTH) < (mMainValue + deltaB)) deltaB = 0.0;
 
             mLeft += deltaA;
             mMainValue += deltaB;

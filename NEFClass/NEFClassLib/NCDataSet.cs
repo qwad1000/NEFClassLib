@@ -36,6 +36,8 @@ namespace NEFClassLib
         }
     }
 
+
+	//TODO: implement enumerator
     public class NCDataSet
     {
         private NCEntity[] mEntities;

@@ -25,6 +25,15 @@ namespace NEFClassLib.FuzzyNumbers
             mRightShouldered = rightShouldered;
         }
 
+        public GaussFuzzyNumber(GaussFuzzyNumber number)
+        {
+            mA = number.mA;
+            mB = number.mB;
+
+            mLeftShouldered = number.mLeftShouldered;
+            mRightShouldered = number.mRightShouldered;
+        }
+
         public double GetMembership(double x)
         {
             if (mLeftShouldered && x <= mA)
