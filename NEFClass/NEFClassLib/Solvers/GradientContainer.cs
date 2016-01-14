@@ -23,7 +23,6 @@ namespace NEFClassLib.Solvers
                 propagateFunction(pattern);
                 for (int i = 0; i < iCount; i++) {
                     int jCount = jCounts[i];
-                    // arr[i] = new double[jCount];
                     for (int j = 0; j < jCount; j++) {
                         arr[i][j] += localGradientFunction(i, j, getClassIndexFunction(pattern.Class));
                     }

@@ -6,9 +6,10 @@ using NEFClassLib.FuzzyNumbers;
 
 namespace NEFClassLib
 {
-    public abstract class BaseNEFClassNetwork <PartitionType, NumberType> 
+    public abstract class BaseNEFClassNetwork <PartitionType, NumberType> : INEFClass
         where PartitionType : IPartition<NumberType> 
         where NumberType : IFuzzyNumber
+
     {
         private const string LOG_TAG = "BaseNEFClassNetwork";
 

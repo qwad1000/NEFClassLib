@@ -55,6 +55,7 @@
     <Compile Include="FuzzyNumbers\TriangleFuzzyNumber.cs" />
     <Compile Include="Solvers\GoldenEquationSolver.cs" />
     <Compile Include="Solvers\GradientContainer.cs" />
+    <Compile Include="INEFClass.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Logging\Logging.csproj">
